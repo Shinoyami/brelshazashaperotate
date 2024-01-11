@@ -10,12 +10,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const centerY = canvas.height / 2;
   const circleRadius = 70;
 
-  ctx.beginPath();
-  ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI);
-  ctx.fillStyle = "blue";
-  ctx.fill();
-  ctx.stroke();
-
   ctx.lineWidth = 5;
   ctx.lineCap = "round";
   ctx.strokeStyle = "#000";
@@ -55,6 +49,14 @@ document.addEventListener("DOMContentLoaded", function () {
     const x = e.clientX - canvas.offsetLeft;
     const y = e.clientY - canvas.offsetTop;
 
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    setStartPoint(e);
+  }
+
+  window.rotateLines = function (angle) {
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.beginPath();
     ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI);
@@ -62,22 +64,13 @@ document.addEventListener("DOMContentLoaded", function () {
     ctx.fill();
     ctx.stroke();
 
-    ctx.beginPath();
-    ctx.moveTo(startX, startY);
-    ctx.lineTo(x, y);
-    ctx.stroke();
-  }
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.rotate((angle * Math.PI) / 180);
 
-  window.rotate90 = function () {
-    rotateCanvas(90);
-  };
-
-  window.rotate180 = function () {
-    rotateCanvas(180);
-  };
-
-  window.rotate270 = function () {
-    rotateCanvas(270);
+    // Redraw the existing lines after rotation
+    ctx.putImageData(imageData, -centerX, -centerY);
+    ctx.restore();
   };
 
   window.resetCanvas = function () {
@@ -88,25 +81,4 @@ document.addEventListener("DOMContentLoaded", function () {
     ctx.fill();
     ctx.stroke();
   };
-
-function rotateCanvas(angle) {
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  canvas.width = canvas.height;
-  canvas.height = imageData.width;
-  ctx.save();
-  ctx.translate(canvas.width / 2, canvas.height / 2);
-  ctx.rotate((angle * Math.PI) / 180);
-  ctx.drawImage(canvas, -canvas.height / 2, -canvas.width / 2);
-  ctx.restore();
-
-  // Redraw the non-deletable circle after rotation
-  ctx.beginPath();
-  ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI);
-  ctx.fillStyle = "blue";
-  ctx.fill();
-  ctx.stroke();
-
-  // Redraw the existing lines after rotation
-  ctx.putImageData(imageData, 0, 0);
-}
 });
