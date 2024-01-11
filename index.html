@@ -1,17 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="styles.css">
-  <title>Simple Drawing</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        canvas {
+            border: 1px solid #000;
+        }
+    </style>
+    <title>Simple Drawing App</title>
 </head>
 <body>
-  <canvas id="drawingCanvas" width="600" height="400"></canvas>
-  <button onclick="resetCanvas()">Reset</button>
-  <button onclick="rotateLines(90)">Rotate 90º</button>
-  <button onclick="rotateLines(180)">Rotate 180º</button>
-  <button onclick="rotateLines(270)">Rotate 270º</button>
-  <script src="scripts.js"></script>
+    <canvas id="drawingCanvas" width="400" height="400"></canvas>
+    <button onclick="rotateImage(90)">Rotate 90º</button>
+    <button onclick="rotateImage(180)">Rotate 180º</button>
+    <button onclick="rotateImage(270)">Rotate 270º</button>
+    <button onclick="resetCanvas()">Reset</button>
+
+    <script>
+        const canvas = document.getElementById('drawingCanvas');
+        const context = canvas.getContext('2d');
+        let isDrawing = false;
+
+        // Draw a non-deletable circle in the middle
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const circleRadius = 50;
+
+        function drawCircle() {
+            context.beginPath();
+            context.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI);
+            context.fillStyle = 'blue';
+            context.fill();
+            context.lineWidth = 2;
+            context.strokeStyle = 'black';
+            context.stroke();
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            context.lineWidth = 10;
+            context.lineCap = 'round';
+            context.beginPath();
+            context.moveTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
+        }
+
+        function drawLine(e) {
+            if (!isDrawing) return;
+            context.lineTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
+            context.stroke();
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        function rotateImage(degrees) {
+            // Create a new canvas for drawing operations
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tempContext = tempCanvas.getContext('2d');
+
+            // Draw the non-deletable circle on the temporary canvas
+            drawCircle(tempContext);
+
+            // Draw the existing drawing on the temporary canvas
+            tempContext.drawImage(canvas, 0, 0);
+
+            // Clear the main canvas
+            context.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Apply rotation on the main canvas
+            context.save();
+            context.translate(canvas.width / 2, canvas.height / 2);
+            context.rotate((degrees * Math.PI) / 180);
+            context.translate(-canvas.width / 2, -canvas.height / 2);
+
+            // Draw the non-deletable circle on the main canvas
+            drawCircle();
+
+            // Draw the rotated drawing from the temporary canvas on the main canvas
+            context.drawImage(tempCanvas, 0, 0);
+
+            context.restore();
+        }
+
+        function resetCanvas() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            // Redraw the non-deletable circle
+            drawCircle();
+        }
+
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', drawLine);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+
+        // Initial draw of the non-deletable circle
+        drawCircle();
+    </script>
 </body>
 </html>
