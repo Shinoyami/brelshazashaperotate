@@ -35,7 +35,7 @@
         // Draw a non-deletable circle in the middle
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
-        const circleRadius = 50;
+        const circleRadius = 60;
 
         function drawCircle() {
             context.beginPath();
@@ -56,7 +56,7 @@
                 context.moveTo(line.start.x, line.start.y);
                 context.lineTo(line.end.x, line.end.y);
                 context.lineCap = 'round';
-                context.lineWidth = 10;
+                context.lineWidth = 6;
                 context.stroke();
             });
         }
