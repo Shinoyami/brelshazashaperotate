@@ -27,7 +27,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function handleMouseUp() {
     isDrawing = false;
-    lines.push([]);
     ctx.beginPath();
   }
 
@@ -46,7 +45,6 @@ document.addEventListener("DOMContentLoaded", function () {
     startX = e.clientX - canvas.offsetLeft;
     startY = e.clientY - canvas.offsetTop;
     ctx.moveTo(startX, startY);
-    lines[lines.length - 1].push({ x: startX, y: startY });
   }
 
   function drawStraightLineTo(e) {
@@ -55,7 +53,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     ctx.lineTo(x, y);
     ctx.stroke();
-    lines[lines.length - 1].push({ x, y });
+    lines.push({ startX, startY, endX: x, endY: y });
+    setStartPoint(e);
   }
 
   window.rotateLines = function (angle) {
@@ -74,14 +73,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Redraw the existing lines after rotation
     lines.forEach((line) => {
-      ctx.moveTo(line[0].x, line[0].y);
-      for (let i = 1; i < line.length; i++) {
-        ctx.lineTo(line[i].x, line[i].y);
-      }
+      ctx.beginPath();
+      ctx.moveTo(line.startX, line.startY);
+      ctx.lineTo(line.endX, line.endY);
+      ctx.stroke();
     });
 
     ctx.restore();
-    ctx.stroke();
   };
 
   window.resetCanvas = function () {
