@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function handleMouseMove(e) {
     if (!isDrawing) return;
-    drawLineTo(e);
+    drawStraightLineTo(e);
   }
 
   function handleMouseOut() {
@@ -49,19 +49,23 @@ document.addEventListener("DOMContentLoaded", function () {
   function setStartPoint(e) {
     startX = e.clientX - canvas.offsetLeft;
     startY = e.clientY - canvas.offsetTop;
-    ctx.beginPath();
-    ctx.moveTo(startX, startY);
   }
 
-  function drawLineTo(e) {
+  function drawStraightLineTo(e) {
     const x = e.clientX - canvas.offsetLeft;
     const y = e.clientY - canvas.offsetTop;
 
-    ctx.lineTo(x, y);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI);
+    ctx.fillStyle = "blue";
+    ctx.fill();
     ctx.stroke();
 
-    // Reset the starting point to the current mouse position
-    setStartPoint(e);
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(x, y);
+    ctx.stroke();
   }
 
   window.rotate90 = function () {
@@ -76,22 +80,33 @@ document.addEventListener("DOMContentLoaded", function () {
     rotateCanvas(270);
   };
 
-  function rotateCanvas(angle) {
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    canvas.width = canvas.height;
-    canvas.height = imageData.width;
-    ctx.save();
-    ctx.translate(canvas.width / 2, canvas.height / 2);
-    ctx.rotate((angle * Math.PI) / 180);
-    ctx.drawImage(canvas, -canvas.height / 2, -canvas.width / 2);
-    ctx.restore();
-    ctx.putImageData(imageData, 0, 0);
-
-    // Redraw the non-deletable circle after rotation
+  window.resetCanvas = function () {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.beginPath();
     ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI);
     ctx.fillStyle = "blue";
     ctx.fill();
     ctx.stroke();
-  }
+  };
+
+function rotateCanvas(angle) {
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  canvas.width = canvas.height;
+  canvas.height = imageData.width;
+  ctx.save();
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  ctx.rotate((angle * Math.PI) / 180);
+  ctx.drawImage(canvas, -canvas.height / 2, -canvas.width / 2);
+  ctx.restore();
+
+  // Redraw the non-deletable circle after rotation
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI);
+  ctx.fillStyle = "blue";
+  ctx.fill();
+  ctx.stroke();
+
+  // Redraw the existing lines after rotation
+  ctx.putImageData(imageData, 0, 0);
+}
 });
