@@ -2,6 +2,9 @@ document.addEventListener("DOMContentLoaded", function () {
   const canvas = document.getElementById("drawingCanvas");
   const ctx = canvas.getContext("2d");
   let drawing = false;
+  let lastX = 0;
+  let lastY = 0;
+
   ctx.lineWidth = 5;
   ctx.lineCap = "round";
   ctx.strokeStyle = "#000";
@@ -13,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function startDrawing(e) {
     drawing = true;
-    draw(e);
+    setPosition(e);
   }
 
   function stopDrawing() {
@@ -24,10 +27,16 @@ document.addEventListener("DOMContentLoaded", function () {
   function draw(e) {
     if (!drawing) return;
 
-    ctx.lineTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
-    ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
+    ctx.moveTo(lastX, lastY);
+    setPosition(e);
+    ctx.lineTo(lastX, lastY);
+    ctx.stroke();
+  }
+
+  function setPosition(e) {
+    lastX = e.clientX - canvas.offsetLeft;
+    lastY = e.clientY - canvas.offsetTop;
   }
 
   window.rotate90 = function () {
