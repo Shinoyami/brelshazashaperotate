@@ -1,42 +1,67 @@
 document.addEventListener("DOMContentLoaded", function () {
   const canvas = document.getElementById("drawingCanvas");
   const ctx = canvas.getContext("2d");
-  let drawing = false;
-  let lastX = 0;
-  let lastY = 0;
+  let isDrawing = false;
+  let startX = 0;
+  let startY = 0;
+
+  // Draw a non-deletable circle in the middle
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+  const circleRadius = 30;
+
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI);
+  ctx.fillStyle = "blue";
+  ctx.fill();
+  ctx.stroke();
 
   ctx.lineWidth = 5;
   ctx.lineCap = "round";
   ctx.strokeStyle = "#000";
 
-  canvas.addEventListener("mousedown", startDrawing);
-  canvas.addEventListener("mouseup", stopDrawing);
-  canvas.addEventListener("mousemove", draw);
-  canvas.addEventListener("mouseout", stopDrawing);
+  canvas.addEventListener("mousedown", handleMouseDown);
+  canvas.addEventListener("mouseup", handleMouseUp);
+  canvas.addEventListener("mousemove", handleMouseMove);
+  canvas.addEventListener("mouseout", handleMouseOut);
 
-  function startDrawing(e) {
-    drawing = true;
-    setPosition(e);
+  function handleMouseDown(e) {
+    isDrawing = true;
+    setStartPoint(e);
   }
 
-  function stopDrawing() {
-    drawing = false;
+  function handleMouseUp() {
+    isDrawing = false;
     ctx.beginPath();
   }
 
-  function draw(e) {
-    if (!drawing) return;
+  function handleMouseMove(e) {
+    if (!isDrawing) return;
+    drawLineTo(e);
+  }
 
+  function handleMouseOut() {
+    if (isDrawing) {
+      handleMouseUp();
+    }
+  }
+
+  function setStartPoint(e) {
+    startX = e.clientX - canvas.offsetLeft;
+    startY = e.clientY - canvas.offsetTop;
     ctx.beginPath();
-    ctx.moveTo(lastX, lastY);
-    setPosition(e);
-    ctx.lineTo(lastX, lastY);
+    ctx.moveTo(startX, startY);
+  }
+
+  function drawLineTo(e) {
+    const x = e.clientX - canvas.offsetLeft;
+    const y = e.clientY - canvas.offsetTop;
+
+    ctx.lineTo(x, y);
     ctx.stroke();
-  }
 
-  function setPosition(e) {
-    lastX = e.clientX - canvas.offsetLeft;
-    lastY = e.clientY - canvas.offsetTop;
+    // Reset the starting point to the current mouse position
+    setStartPoint(e);
   }
 
   window.rotate90 = function () {
@@ -61,5 +86,12 @@ document.addEventListener("DOMContentLoaded", function () {
     ctx.drawImage(canvas, -canvas.height / 2, -canvas.width / 2);
     ctx.restore();
     ctx.putImageData(imageData, 0, 0);
+
+    // Redraw the non-deletable circle after rotation
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI);
+    ctx.fillStyle = "blue";
+    ctx.fill();
+    ctx.stroke();
   }
 });
