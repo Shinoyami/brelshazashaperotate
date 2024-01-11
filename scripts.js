@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Draw a non-deletable circle in the middle
   const centerX = canvas.width / 2;
   const centerY = canvas.height / 2;
-  const circleRadius = 30;
+  const circleRadius = 70;
 
   ctx.beginPath();
   ctx.arc(centerX, centerY, circleRadius, 0, 2 * Math.PI);
