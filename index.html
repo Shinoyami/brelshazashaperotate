@@ -60,6 +60,19 @@
         let startPoint = { x: 0, y: 0 };
         let lines = [];
 
+const imageUrl = 'https://i.imgur.com/ttxPCvU.png';
+
+// Load image
+const backgroundImage = new Image();
+backgroundImage.src = imageUrl;
+
+// Draw the background image
+backgroundImage.onload = function () {
+    context.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+};
+
+
+
         // Draw a non-deletable circle in the middle
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
@@ -76,18 +89,18 @@
         }
 
         function drawLines() {
-            context.clearRect(0, 0, canvas.width, canvas.height);
-            drawCircle();
+    context.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
 
-            lines.forEach(line => {
-                context.beginPath();
-                context.moveTo(line.start.x, line.start.y);
-                context.lineTo(line.end.x, line.end.y);
-                context.lineCap = 'round';
-                context.lineWidth = 10;
-                context.stroke();
-            });
-        }
+    lines.forEach(line => {
+        context.beginPath();
+        context.moveTo(line.start.x, line.start.y);
+        context.lineTo(line.end.x, line.end.y);
+        context.lineCap = 'round';
+        context.lineWidth = 10;
+        context.stroke();
+    });
+}
+
 
         function startDrawing(e) {
             isDrawing = true;
@@ -95,23 +108,59 @@
         }
 
         function drawLine(e) {
-            if (!isDrawing) return;
-            drawLines();
-            context.beginPath();
-            context.moveTo(startPoint.x, startPoint.y);
-            context.lineTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
-            context.lineCap = 'round';
-            context.lineWidth = 10;
-            context.stroke();
-        }
+    if (!isDrawing) return;
 
-        function stopDrawing(e) {
-            if (!isDrawing) return;
-            isDrawing = false;
-            const endPoint = { x: e.clientX - canvas.offsetLeft, y: e.clientY - canvas.offsetTop };
-            lines.push({ start: { ...startPoint }, end: { ...endPoint } });
-            drawLines();
-        }
+    // Calculate the angle of the line
+    const angle = Math.atan2(e.clientY - canvas.offsetTop - startPoint.y, e.clientX - canvas.offsetLeft - startPoint.x);
+    const snappedAngle = Math.round(angle / (Math.PI / 4)) * (Math.PI / 4);
+
+    // Calculate the intersection point with the canvas boundaries
+    const intersectionPoint = getIntersectionPoint(startPoint.x, startPoint.y, snappedAngle, canvas.width, canvas.height);
+
+    drawLines();
+    context.beginPath();
+    context.moveTo(startPoint.x, startPoint.y);
+    context.lineTo(intersectionPoint.x, intersectionPoint.y);
+    context.lineCap = 'round';
+    context.lineWidth = 10;
+    context.stroke();
+}
+
+// Function to calculate the intersection point with canvas boundaries
+function getIntersectionPoint(x, y, angle, canvasWidth, canvasHeight) {
+    // Calculate the intersection with each canvas boundary
+    const intersectionTop = { x: x + (canvasHeight - y) / Math.tan(angle), y: canvasHeight };
+    const intersectionBottom = { x: x - y / Math.tan(angle), y: 0 };
+    const intersectionLeft = { x: 0, y: y - x * Math.tan(angle) };
+    const intersectionRight = { x: canvasWidth, y: y + (canvasWidth - x) * Math.tan(angle) };
+
+    // Find the closest intersection point
+    const intersections = [intersectionTop, intersectionBottom, intersectionLeft, intersectionRight];
+    const closestIntersection = intersections.reduce((closest, point) => {
+        const distance = Math.sqrt((point.x - x) ** 2 + (point.y - y) ** 2);
+        return distance < closest.distance ? { point, distance } : closest;
+    }, { point: null, distance: Infinity });
+
+    return closestIntersection.point;
+}
+
+
+
+function stopDrawing(e) {
+    if (!isDrawing) return;
+    isDrawing = false;
+
+    // Calculate the angle of the line
+    const angle = Math.atan2(e.clientY - canvas.offsetTop - startPoint.y, e.clientX - canvas.offsetLeft - startPoint.x);
+    const snappedAngle = Math.round(angle / (Math.PI / 4)) * (Math.PI / 4);
+
+    // Calculate the intersection point with the canvas boundaries
+    const intersectionPoint = getIntersectionPoint(startPoint.x, startPoint.y, snappedAngle, canvas.width, canvas.height);
+
+    lines.push({ start: { ...startPoint }, end: { ...intersectionPoint } });
+    drawLines();
+}
+
 
         function rotateImage(degrees) {
             // Create a new canvas for drawing operations
