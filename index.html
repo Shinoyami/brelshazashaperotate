@@ -26,7 +26,7 @@
             margin: 5px;
         }
     </style>
-    <title>Simple Drawing App</title>
+    <title>Brelshaza Shape Rotate</title>
 </head>
 <body>
     <canvas id="drawingCanvas" width="400" height="400"></canvas>
@@ -57,21 +57,18 @@
         const canvas = document.getElementById('drawingCanvas');
         const context = canvas.getContext('2d');
         let isDrawing = false;
-        let startPoint = { x: 0, y: 0 };
         let lines = [];
 
-const imageUrl = 'https://i.imgur.com/shPjgYD.png';
+        const imageUrl = 'https://i.imgur.com/ttxPCvU.png';
 
-// Load image
-const backgroundImage = new Image();
-backgroundImage.src = imageUrl;
+        // Load image
+        const backgroundImage = new Image();
+        backgroundImage.src = imageUrl;
 
-// Draw the background image
-backgroundImage.onload = function () {
-    context.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
-};
-
-
+        // Draw the background image
+        backgroundImage.onload = function () {
+            context.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+        };
 
         // Draw a non-deletable circle in the middle
         const centerX = canvas.width / 2;
@@ -89,78 +86,49 @@ backgroundImage.onload = function () {
         }
 
         function drawLines() {
-    context.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+            context.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
 
-    lines.forEach(line => {
-        context.beginPath();
-        context.moveTo(line.start.x, line.start.y);
-        context.lineTo(line.end.x, line.end.y);
-        context.lineCap = 'round';
-        context.lineWidth = 10;
-        context.stroke();
-    });
-}
+            lines.forEach(line => {
+                context.beginPath();
+                context.moveTo(line.start.x, line.start.y);
+                context.lineTo(line.end.x, line.end.y);
+                context.lineCap = 'round';
+                context.lineWidth = 10;
+                context.stroke();
+            });
+        }
 
+        function snapToValidAngle(angle) {
+            const validAngles = [0, Math.PI / 4, Math.PI / 2, (3 * Math.PI) / 4, Math.PI, -(3 * Math.PI) / 4, -(Math.PI / 2), -(Math.PI / 4)];
+            const closestValidAngle = validAngles.reduce((closest, valid) => {
+                return Math.abs(valid - angle) < Math.abs(closest - angle) ? valid : closest;
+            });
 
-        function startDrawing(e) {
-            isDrawing = true;
-            startPoint = { x: e.clientX - canvas.offsetLeft, y: e.clientY - canvas.offsetTop };
+            return closestValidAngle;
         }
 
         function drawLine(e) {
-    if (!isDrawing) return;
+        if (isDrawing) return;
 
-    // Calculate the angle of the line
-    const angle = Math.atan2(e.clientY - canvas.offsetTop - startPoint.y, e.clientX - canvas.offsetLeft - startPoint.x);
-    const snappedAngle = Math.round(angle / (Math.PI / 4)) * (Math.PI / 4);
+        // Calculate the angle of the line
+        const angle = Math.atan2(e.clientY - canvas.offsetTop - centerY, e.clientX - canvas.offsetLeft - centerX);
+        const snappedAngle = snapToValidAngle(angle);
 
-    // Calculate the intersection point with the canvas boundaries
-    const intersectionPoint = getIntersectionPoint(startPoint.x, startPoint.y, snappedAngle, canvas.width, canvas.height);
+        const maxDistance = Math.min(
+            centerX / Math.abs(Math.cos(snappedAngle)),
+            centerY / Math.abs(Math.sin(snappedAngle)),
+            (canvas.width - centerX) / Math.abs(Math.cos(snappedAngle)),
+            (canvas.height - centerY) / Math.abs(Math.sin(snappedAngle))
+        );
 
-    drawLines();
-    context.beginPath();
-    context.moveTo(startPoint.x, startPoint.y);
-    context.lineTo(intersectionPoint.x, intersectionPoint.y);
-    context.lineCap = 'round';
-    context.lineWidth = 10;
-    context.stroke();
-}
+        const endPoint = {
+            x: centerX + maxDistance * Math.cos(snappedAngle),
+            y: centerY + maxDistance * Math.sin(snappedAngle)
+        };
 
-// Function to calculate the intersection point with canvas boundaries
-function getIntersectionPoint(x, y, angle, canvasWidth, canvasHeight) {
-    // Calculate the intersection with each canvas boundary
-    const intersectionTop = { x: x + (canvasHeight - y) / Math.tan(angle), y: canvasHeight };
-    const intersectionBottom = { x: x - y / Math.tan(angle), y: 0 };
-    const intersectionLeft = { x: 0, y: y - x * Math.tan(angle) };
-    const intersectionRight = { x: canvasWidth, y: y + (canvasWidth - x) * Math.tan(angle) };
-
-    // Find the closest intersection point
-    const intersections = [intersectionTop, intersectionBottom, intersectionLeft, intersectionRight];
-    const closestIntersection = intersections.reduce((closest, point) => {
-        const distance = Math.sqrt((point.x - x) ** 2 + (point.y - y) ** 2);
-        return distance < closest.distance ? { point, distance } : closest;
-    }, { point: null, distance: Infinity });
-
-    return closestIntersection.point;
-}
-
-
-
-function stopDrawing(e) {
-    if (!isDrawing) return;
-    isDrawing = false;
-
-    // Calculate the angle of the line
-    const angle = Math.atan2(e.clientY - canvas.offsetTop - startPoint.y, e.clientX - canvas.offsetLeft - startPoint.x);
-    const snappedAngle = Math.round(angle / (Math.PI / 4)) * (Math.PI / 4);
-
-    // Calculate the intersection point with the canvas boundaries
-    const intersectionPoint = getIntersectionPoint(startPoint.x, startPoint.y, snappedAngle, canvas.width, canvas.height);
-
-    lines.push({ start: { ...startPoint }, end: { ...intersectionPoint } });
-    drawLines();
-}
-
+        lines.push({ start: { x: centerX, y: centerY }, end: { ...endPoint } });
+        drawLines();
+    }
 
         function rotateImage(degrees) {
             // Create a new canvas for drawing operations
@@ -200,10 +168,7 @@ function stopDrawing(e) {
             drawCircle();
         }
 
-        canvas.addEventListener('mousedown', startDrawing);
-        canvas.addEventListener('mousemove', drawLine);
-        canvas.addEventListener('mouseup', stopDrawing);
-        canvas.addEventListener('mouseout', stopDrawing);
+        canvas.addEventListener('click', drawLine);
 
         // Initial draw of the non-deletable circle
         drawCircle();
