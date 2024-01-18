@@ -170,7 +170,9 @@
         function resetCanvas() {
             lines = [];
             context.clearRect(0, 0, canvas.width, canvas.height);
-            // Redraw the non-deletable circle
+    // Redraw the background image
+            context.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+    // Redraw the non-deletable circle
             drawCircle();
             clearDrawingHistory();
         }
