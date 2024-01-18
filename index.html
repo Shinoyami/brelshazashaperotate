@@ -59,7 +59,7 @@
         let isDrawing = false;
         let lines = [];
 
-        const imageUrl = 'https://i.imgur.com/u0VQADH.png';
+        const imageUrl = 'https://i.imgur.com/ttxPCvU.png';
 
         // Load image
         const backgroundImage = new Image();
@@ -108,27 +108,26 @@
         }
 
         function drawLine(e) {
-        if (isDrawing) return;
+    if (isDrawing) return;
 
-        // Calculate the angle of the line
-        const angle = Math.atan2(e.clientY - canvas.offsetTop - centerY, e.clientX - canvas.offsetLeft - centerX);
-        const snappedAngle = snapToValidAngle(angle);
+    // Calculate the angle of the line
+    const angle = Math.atan2(e.clientY - canvas.offsetTop - centerY, e.clientX - canvas.offsetLeft - centerX);
+    const snappedAngle = snapToValidAngle(angle);
 
-        const maxDistance = Math.min(
-            centerX / Math.abs(Math.cos(snappedAngle)),
-            centerY / Math.abs(Math.sin(snappedAngle)),
-            (canvas.width - centerX) / Math.abs(Math.cos(snappedAngle)),
-            (canvas.height - centerY) / Math.abs(Math.sin(snappedAngle))
-        );
+    const maxDistanceX = Math.min(centerX / Math.abs(Math.cos(snappedAngle)), (canvas.width - centerX) / Math.abs(Math.cos(snappedAngle)));
+    const maxDistanceY = Math.min(centerY / Math.abs(Math.sin(snappedAngle)), (canvas.height - centerY) / Math.abs(Math.sin(snappedAngle)));
 
-        const endPoint = {
-            x: centerX + maxDistance * Math.cos(snappedAngle),
-            y: centerY + maxDistance * Math.sin(snappedAngle)
-        };
+    const maxDistance = Math.min(maxDistanceX, maxDistanceY);
 
-        lines.push({ start: { x: centerX, y: centerY }, end: { ...endPoint } });
-        drawLines();
-    }
+    const endPoint = {
+        x: centerX + maxDistance * Math.cos(snappedAngle),
+        y: centerY + maxDistance * Math.sin(snappedAngle)
+    };
+
+    lines.push({ start: { x: centerX, y: centerY }, end: { ...endPoint } });
+    drawLines();
+}
+
 
         function rotateImage(degrees) {
             // Create a new canvas for drawing operations
