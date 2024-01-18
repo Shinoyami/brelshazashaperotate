@@ -47,6 +47,11 @@
             Rotate 270º
         </button>
         
+        <button onclick="undoDrawing()" id="undoButton">
+            <img src="undo.png" alt="Undo">
+            Undo (Ctrl+Z)
+        </button>
+
         <button onclick="resetCanvas()">
             <img src="reset.png" alt="Reset">
             Reset
@@ -58,6 +63,7 @@
         const context = canvas.getContext('2d');
         let isDrawing = false;
         let lines = [];
+        let drawingHistory = [];
 
         const imageUrl = 'https://i.imgur.com/tyAKQcs.png';
 
@@ -108,26 +114,26 @@
         }
 
         function drawLine(e) {
-    if (isDrawing) return;
+            if (isDrawing) return;
 
-    // Calculate the angle of the line
-    const angle = Math.atan2(e.clientY - canvas.offsetTop - centerY, e.clientX - canvas.offsetLeft - centerX);
-    const snappedAngle = snapToValidAngle(angle);
+            // Calculate the angle of the line
+            const angle = Math.atan2(e.clientY - canvas.offsetTop - centerY, e.clientX - canvas.offsetLeft - centerX);
+            const snappedAngle = snapToValidAngle(angle);
 
-    const maxDistanceX = Math.min(centerX / Math.abs(Math.cos(snappedAngle)), (canvas.width - centerX) / Math.abs(Math.cos(snappedAngle)));
-    const maxDistanceY = Math.min(centerY / Math.abs(Math.sin(snappedAngle)), (canvas.height - centerY) / Math.abs(Math.sin(snappedAngle)));
+            const maxDistanceX = Math.min(centerX / Math.abs(Math.cos(snappedAngle)), (canvas.width - centerX) / Math.abs(Math.cos(snappedAngle)));
+            const maxDistanceY = Math.min(centerY / Math.abs(Math.sin(snappedAngle)), (canvas.height - centerY) / Math.abs(Math.sin(snappedAngle)));
 
-    const maxDistance = Math.min(maxDistanceX, maxDistanceY);
+            const maxDistance = Math.min(maxDistanceX, maxDistanceY);
 
-    const endPoint = {
-        x: centerX + maxDistance * Math.cos(snappedAngle),
-        y: centerY + maxDistance * Math.sin(snappedAngle)
-    };
+            const endPoint = {
+                x: centerX + maxDistance * Math.cos(snappedAngle),
+                y: centerY + maxDistance * Math.sin(snappedAngle)
+            };
 
-    lines.push({ start: { x: centerX, y: centerY }, end: { ...endPoint } });
-    drawLines();
-}
-
+            lines.push({ start: { x: centerX, y: centerY }, end: { ...endPoint } });
+            drawLines();
+            saveDrawingState();
+        }
 
         function rotateImage(degrees) {
             // Create a new canvas for drawing operations
@@ -158,6 +164,7 @@
             context.drawImage(tempCanvas, 0, 0);
 
             context.restore();
+            saveDrawingState();
         }
 
         function resetCanvas() {
@@ -165,7 +172,31 @@
             context.clearRect(0, 0, canvas.width, canvas.height);
             // Redraw the non-deletable circle
             drawCircle();
+            clearDrawingHistory();
         }
+
+        function saveDrawingState() {
+            // Save the current drawing state to the history array
+            const currentState = context.getImageData(0, 0, canvas.width, canvas.height);
+            drawingHistory.push(currentState);
+        }
+
+        function undoDrawing() {
+            if (lines.length > 0) {
+                // Remove the last drawn line
+                lines.pop();
+                // Redraw the updated lines on the canvas
+                drawLines();
+                saveDrawingState();
+            }
+        }
+
+        // Event listener for Ctrl+Z shortcut
+        document.addEventListener('keydown', function (event) {
+            if (event.ctrlKey && event.key === 'z') {
+                undoDrawing();
+            }
+        });
 
         canvas.addEventListener('click', drawLine);
 
